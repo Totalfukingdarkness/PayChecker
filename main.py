@@ -44,18 +44,16 @@ def get_statistics_hhru(popular_languages):
     vacancies_stats = {}
     for prog_language in popular_languages:
         all_salaries = []
-        max_pages = 20
         for page in count(start=0):
-            if page > 0:
-                time.sleep(0.5)
+            time.sleep(0.5)
             full_response = get_response_hhru(prog_language, page)
             total_vacancies = full_response['found']
-            actual_pages = min(full_response['pages'], max_pages)
+            pages = full_response['pages']
             for vacancy in full_response['items']:
                 salary = predict_rub_salary_for_hh(vacancy['salary'])
                 if salary:
                     all_salaries.append(salary)
-            if page >= actual_pages - 1:
+            if page >= pages - 1:
                 break
         avg_salary = sum(all_salaries) / len(all_salaries) if all_salaries else 0
         vacancies_stats[prog_language] = {
@@ -71,8 +69,7 @@ def get_statistics_sj(popular_languages, secret_key, sj_token):
     for prog_language in popular_languages:
         all_salaries = []
         for page in count(start=0):
-            if page > 0:
-                time.sleep(0.2)
+            time.sleep(0.2)
             full_response = get_response_superjob(prog_language, secret_key, sj_token, page)
             if not page:
                 total_vacancies = full_response['total']
@@ -118,12 +115,10 @@ def calculate_average_salary(salary_from, salary_to):
 
 
 def create_table_with_vacancies(vacancy_statistics, title):
-    headers = ['Язык программирования'] + list(next(iter(vacancy_statistics.values())).keys())
-    table_data = [headers]
-    for prog_lang, statistic in vacancy_statistics.items():
-        row = [prog_lang] + list(statistic.values())
-        table_data.append(row)
-    table = AsciiTable(table_data, title)
+    first_statistic = next(iter(vacancy_statistics.values()))
+    headers = ['Язык программирования'] + list(first_statistic.keys())
+    rows = [[lang] + list(stats.values()) for lang, stats in vacancy_statistics.items()]
+    table = AsciiTable([headers] + rows, title)
     return table.table
 
 
@@ -154,4 +149,5 @@ def main():
 
 
 if __name__ == '__main__':
+
     main()
